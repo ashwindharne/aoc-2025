@@ -55,7 +55,7 @@ pub fn main() {
     let part1 = solve_part1(&input);
     let part2 = solve_part2(&input);
 
-    println!("Day 2:");
+    println!("Day 3:");
     println!("  Part 1: {}", part1);
     println!("  Part 2: {}", part2);
 }
