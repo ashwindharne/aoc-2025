@@ -1,6 +1,6 @@
 use std::fs;
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 enum Operator {
     Add,
     Multiply,
@@ -49,8 +49,66 @@ fn solve_part1(input: &str) -> u64 {
     zipped
 }
 
-fn solve_part2(_input: &str) -> u64 {
-    0
+fn solve_part2(_input: &str) -> u128 {
+    let lines = _input.split('\n').filter(|line| !line.is_empty());
+    let longest_line_len = lines
+        .clone()
+        .map(|line| line.chars().count())
+        .max()
+        .unwrap();
+    let num_lines = lines.clone().count();
+    let operations = lines.clone().last().unwrap();
+    let mut op_index_slices: Vec<(usize, usize, Operator)> = Vec::new();
+    let mut last_index = 0;
+    let mut last_op = match operations.chars().next() {
+        Some('+') => Operator::Add,
+        Some('*') => Operator::Multiply,
+        _ => panic!("Invalid operator"),
+    };
+    for (i, op) in operations.chars().enumerate().skip(1) {
+        match op {
+            '+' => {
+                op_index_slices.push((last_index, i - 2, last_op));
+                last_op = Operator::Add;
+                last_index = i;
+            }
+            '*' => {
+                op_index_slices.push((last_index, i - 2, last_op));
+                last_op = Operator::Multiply;
+                last_index = i;
+            }
+            _ => {}
+        }
+    }
+    op_index_slices.push((last_index, longest_line_len - 1, last_op));
+
+    let mut transposed_problems: Vec<(Operator, Vec<String>)> = op_index_slices
+        .clone()
+        .into_iter()
+        .map(|(start, end, op)| (op, vec![String::new(); end - start + 1]))
+        .collect();
+    lines.take(num_lines - 1).for_each(|line| {
+        for (j, (start, end, _)) in op_index_slices.clone().into_iter().enumerate() {
+            for (operate_index, char_index) in (start..end + 1).enumerate() {
+                if let Some(char_result) = line.chars().nth(char_index) {
+                    transposed_problems[j].1[operate_index].push(char_result);
+                }
+            }
+        }
+    });
+    transposed_problems
+        .into_iter()
+        .map(|(op, values)| match op {
+            Operator::Add => values
+                .into_iter()
+                .map(|val| val.trim().parse::<u128>().unwrap())
+                .sum::<u128>(),
+            Operator::Multiply => values
+                .into_iter()
+                .map(|val| val.trim().parse::<u128>().unwrap())
+                .product::<u128>(),
+        })
+        .sum::<u128>()
 }
 
 pub fn main() {
